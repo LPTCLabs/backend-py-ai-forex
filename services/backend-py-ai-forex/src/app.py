@@ -2,14 +2,21 @@ import csv
 import json
 import logging
 from typing import Any
+
+import matplotlib.pyplot as plt
+from matplotlib import pyplot
+from scipy.stats import sem
 from tqdm import tqdm
 
 import numpy as np
 import pandas as pd
+from numpy import mean
+from numpy import std
 from sklearn import metrics
-from sklearn.metrics import roc_curve, auc
-from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve
 from collections import Counter
+from sklearn.model_selection import KFold, RepeatedKFold
+from sklearn.model_selection import cross_val_score
 
 from .forex import constants, machine_learning, util
 
@@ -25,7 +32,11 @@ def predict_dataset(model: Any, source: str, macro_data: dict, usd: pd.Series) -
     """
     # Load test data
     test_dataset = util.load_macro_dataset(source, macro_data)
-    test_data = util.split_input_output_dataset(test_dataset, usd)
+    if constants.SMA:
+        usd_sma = util.sma(usd, constants.SMA_WINDOW)
+        test_data = util.split_input_output_dataset(test_dataset, usd_sma)
+    else:
+        test_data = util.split_input_output_dataset(test_dataset, usd)
 
     # Predict the test data
     test_input_data, gold_test, test_dates = util.get_X_Y_test(test_data)
@@ -34,7 +45,7 @@ def predict_dataset(model: Any, source: str, macro_data: dict, usd: pd.Series) -
     predicted_labels = [prediction[0][1] for prediction in sorted_predictions]
 
     # combined = util.generate_dataset(test_dates, usd, gold_test, predicted_labels, threshold=0.1)  # monthly
-    # combined = util.generate_dataset(test_dates, usd, gold_test, predicted_labels, months=("6", "12"))  # bi_yearly
+    # combined = util.generate_dataset(test_dates, usd, gold_test, predicted_labels, months=("3"))  # bi_yearly
 
     # price_variation_plot = util.plot_columns(combined, "date", ["threshold_variation", "reversed_price_variation"], ["g", "r"])
     # useful to identify areas that were wrong or not
@@ -43,56 +54,58 @@ def predict_dataset(model: Any, source: str, macro_data: dict, usd: pd.Series) -
     # price_variation_plot.legend(["prediction", "price_variation"])
     # price_variation_plot.savefig("price_variation.png")
     # price_variation_plot.show()
-    #
+
     # variation_plot = util.plot_columns(combined, "date", ["orientation", "prediction", "difference"], ["g", "r", "b"])
     # variation_plot.legend(["prediction", "reversed_price_variation", "difference"])
     # variation_plot.savefig("variation_prediction.png")
     # variation_plot.show()
-    #
+
     # difference_plot = util.plot_columns(combined, "date", ["difference"], ["b"])
     # difference_plot.legend(["prediction", "reversed_price_variation"])
     # difference_plot.savefig("difference.png")
     # difference_plot.show()
 
+    # USDX variations vs predictions
     # variation_prediction = util.vp(usd, predicted_labels, test_dates)
+    # # useful to identify areas that were wrong or not
+    # # for i, x in enumerate(combined):
+    # #     variation_prediction.axvspan(i, i + 1, facecolor="g" if x["difference"] == 0 else "r", alpha=0.2)
     # variation_prediction.legend(["Dollar variation", "Predictions"])
-    # variation_prediction.savefig("new_vp.png")
+    # variation_prediction.savefig("vp_all_data.png")
     # variation_prediction.show()
 
-    # util.write_json_csv("variation_prediction", json.dumps(combined))
-    accuracy = util.compute_accuracy(gold_test, predicted_labels)
+    # Outliers
+    # outliers = util.search_outliers_in_data(macro_data)
+    # outliers.show()
 
+    # Plot USDX
+    # usd_plot = util.plot_usd(usd)
+    # if constants.SMA_PLOT:
+    #     plt.savefig("usdx_sma.png")
+    #     plt.show()
+    # else:
+    #     usd_plot.savefig("usdx.png")
+    #     usd_plot.show()
+
+    # Compute ROC curve and ROC area for each class
+    # roc_auc = util.plot_roc_curve(gold_test, predicted_labels)
+    # roc_auc.show()
+
+    # Features analysis
+    features_analysis = util.features_analysis(constants.MACRO_DATA)
+    features_analysis.show()
+
+    # util.write_json_csv("variation_prediction", json.dumps(combined))
+
+    accuracy = util.compute_accuracy(gold_test, predicted_labels)
     # Accuracy metrics
-    if constants.US_EA_CLASSIFICATION:
-        print("Test 1 : US-EA Classification")
-        print(f"\nComplete accuracy : {accuracy}")
-        # Generate a confusion matrix
-        matrix = metrics.confusion_matrix(gold_test, predicted_labels, labels=constants.BINARY_LABELS)
-        matrix_df = pd.DataFrame(matrix, index=constants.BINARY_LABELS, columns=constants.BINARY_LABELS)
-        print("#########")
-        print("### Confusion matrix\n#########\n", matrix_df)
-        print("\n#########")
-        print("### Classification Report\n#########\n", metrics.classification_report(gold_test, predicted_labels))
-    elif constants.TEST:
-        print("Test 2 : using different features")
-        print(f"\nComplete accuracy : {accuracy}")
-        matrix = metrics.confusion_matrix(gold_test, predicted_labels, labels=constants.BINARY_LABELS)
-        matrix_df = pd.DataFrame(matrix, index=constants.BINARY_LABELS, columns=constants.BINARY_LABELS)
-        print("#########")
-        print("### Confusion matrix\n#########\n", matrix_df)
-        print("\n#########")
-        print("### Classification Report\n#########\n", metrics.classification_report(gold_test, predicted_labels))
-    elif constants.BINARY_CLASSIFICATION:
-        print("Test 3 : US classification")
-        print(f"\nComplete accuracy : {accuracy}")
-        matrix = metrics.confusion_matrix(gold_test, predicted_labels, labels=constants.BINARY_LABELS)
-        matrix_df = pd.DataFrame(matrix, index=constants.BINARY_LABELS, columns=constants.BINARY_LABELS)
-        print("#########")
-        print("### Confusion matrix\n#########\n", matrix_df)
-        print("\n#########")
-        print("### Classification Report\n#########\n", metrics.classification_report(gold_test, predicted_labels))
-    else:
-        raise Exception("Invalid test selected")
+    print(f"\nComplete accuracy : {accuracy}")
+    matrix = metrics.confusion_matrix(gold_test, predicted_labels, labels=constants.BINARY_LABELS)
+    matrix_df = pd.DataFrame(matrix, index=constants.BINARY_LABELS, columns=constants.BINARY_LABELS)
+    print("#########")
+    print("### Confusion matrix\n#########\n", matrix_df)
+    print("\n#########")
+    print("### Classification Report\n#########\n", metrics.classification_report(gold_test, predicted_labels))
 
     # Features automating selection
     # constants_features = constants.US_EA_BINARY_FEATURES.copy()
@@ -172,8 +185,7 @@ def train_model() -> None:
     model = machine_learning.train(train_input_data, train_output_data)
     # Predict on test data
     predict_dataset(model, constants.TEST_DATA, macro_data, usd)
-
-
+    util.cross_validate_model(model, train_input_data, train_output_data)
 # def lunch_model() -> None:
 #     util.automate_randomly_the_process(train_model())
 

@@ -4,11 +4,14 @@ from scipy import stats
 from sklearn import metrics
 import pandas as pd
 import numpy
-import matplotlib.pyplot
+import matplotlib.pyplot as plt
 import os
 import json
+from mpl_interactions import zoom_factory
+from sklearn.model_selection import KFold
 
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.metrics import roc_auc_score, roc_curve
 
 from . import constants
 
@@ -28,71 +31,26 @@ def load_macro_data_wo_delay(source: str) -> tuple:
             values: list = []
             total: int = 0
             # US_EA_BINARY_FEATURES CLASSIFICATION
-            if constants.US_EA_CLASSIFICATION:
-                if constants.ADD_MACRO:
-                    for feature in constants.US_EA_BINARY_FEATURES["MACRO"]:
-                        if feature in line:
-                            total += 1
-                            values.append(line[feature])
-                    if constants.ADD_COMMODITY:
-                        for feature in constants.US_EA_BINARY_FEATURES["COMMODITY"]:
-                            if feature in line:
-                                total += 1
-                                values.append(line[feature])
-                    if constants.ADD_FI:
-                        for feature in constants.US_EA_BINARY_FEATURES["FI"]:
-                            if feature in line:
-                                total += 1
-                                values.append(line[feature])
-                    if constants.ADD_EQUITY:
-                        for feature in constants.US_EA_BINARY_FEATURES["EQUITY"]:
-                            if feature in line:
-                                total += 1
-                                values.append(line[feature])
-            elif constants.TEST:
-                if constants.ADD_MACRO:
-                    for feature in constants.US_EA_BINARY_FEATURES2["MACRO"]:
-                        if feature in line:
-                            total += 1
-                            values.append(line[feature])
-                    if constants.ADD_COMMODITY:
-                        for feature in constants.US_EA_BINARY_FEATURES2["COMMODITY"]:
-                            if feature in line:
-                                total += 1
-                                values.append(line[feature])
-                    if constants.ADD_FI:
-                        for feature in constants.US_EA_BINARY_FEATURES2["FI"]:
-                            if feature in line:
-                                total += 1
-                                values.append(line[feature])
-                    if constants.ADD_EQUITY:
-                        for feature in constants.US_EA_BINARY_FEATURES2["EQUITY"]:
-                            if feature in line:
-                                total += 1
-                                values.append(line[feature])
-            elif constants.BINARY_CLASSIFICATION:
-                if constants.ADD_MACRO:
-                    for feature in constants.US_EA_BINARY_FEATURES2["MACRO"]:
-                        if feature in line:
-                            total += 1
-                            values.append(line[feature])
-                    if constants.ADD_COMMODITY:
-                        for feature in constants.US_EA_BINARY_FEATURES2["COMMODITY"]:
-                            if feature in line:
-                                total += 1
-                                values.append(line[feature])
-                    if constants.ADD_FI:
-                        for feature in constants.US_EA_BINARY_FEATURES2["FI"]:
-                            if feature in line:
-                                total += 1
-                                values.append(line[feature])
-                    if constants.ADD_EQUITY:
-                        for feature in constants.US_EA_BINARY_FEATURES2["EQUITY"]:
-                            if feature in line:
-                                total += 1
-                                values.append(line[feature])
-            else:
-                raise Exception("Invalid test selected")
+            if constants.ADD_MACRO:
+                for feature in constants.US_EA_BINARY["MACRO"]:
+                    if feature in line:
+                        total += 1
+                        values.append(line[feature])
+            if constants.ADD_COMMODITY:
+                for feature in constants.US_EA_BINARY["COMMODITY"]:
+                    if feature in line:
+                        total += 1
+                        values.append(line[feature])
+            if constants.ADD_FI:
+                for feature in constants.US_EA_BINARY["FI"]:
+                    if feature in line:
+                        total += 1
+                        values.append(line[feature])
+            if constants.ADD_EQUITY:
+                for feature in constants.US_EA_BINARY["EQUITY"]:
+                    if feature in line:
+                        total += 1
+                        values.append(line[feature])
             constants.NB_MACRO_DATA = total
             date = line["Date"][:-3]
             usd[date] = float(line["Adj Close"])
@@ -101,15 +59,12 @@ def load_macro_data_wo_delay(source: str) -> tuple:
                 for _pos in range(len(previous_line)):
                     if len(data[date][_pos]) == 0 and len(previous_line[_pos]) > 0:
                         data[date][_pos] = previous_line[_pos]
-                    elif (
-                            len(data[date][_pos]) == 0 and len(previous_line[_pos]) == "''"
-                    ):
+                    elif len(data[date][_pos]) == 0 and len(previous_line[_pos]) == "''":
                         data[date][_pos] = "0.0"
             else:
                 for _pos in range(len(values)):
                     if len(data[date][_pos]) == 0:
                         data[date][_pos] = "0.0"
-
             previous_line = data[date][:]
     return data, usd
 
@@ -367,7 +322,7 @@ def write_json_csv(filename, json_str, append=False):
                     csv_writer.writerow(row.values())
 
 
-def plot_columns(data: list, indexed_by, columns: list, colors: list) -> matplotlib.pyplot:
+def plot_columns(data: list, indexed_by, columns: list, colors: list) -> plt:
     """
     Plot the columns on the same graph.
     :param data: List with data
@@ -377,14 +332,13 @@ def plot_columns(data: list, indexed_by, columns: list, colors: list) -> matplot
     :return:
     """
     df = pd.DataFrame(data)
-    matplotlib.pyplot.figure(figsize=(20, 10))
-    matplotlib.pyplot.title(" ".join(columns))
+    plt.figure(figsize=(20, 10))
+    plt.title(" ".join(columns))
     for column in columns:
-        matplotlib.pyplot.plot(df[indexed_by], df[column])  # , color=(colors[i] or None))
-        matplotlib.pyplot.xlabel(indexed_by)
-        matplotlib.pyplot.ylabel(column)
-
-    return matplotlib.pyplot
+        plt.plot(df[indexed_by], df[column])  # , color=(colors[i] or None))
+        plt.xlabel(indexed_by)
+        plt.ylabel(column)
+    return plt
 
 
 def generate_dataset(
@@ -421,9 +375,9 @@ def generate_dataset(
     return combined
 
 
-def vp(usd: pd.Series, predicted_labels, test_dates) -> pd.Series:
+def vp(usd: dict, predicted_labels: list, test_dates) -> plt:
     """
-    Plot usd variation one data every 6 months
+    Plot usd variation and predicted labels.
     :param usd:
     :param predicted_labels:
     :param test_dates:
@@ -431,20 +385,236 @@ def vp(usd: pd.Series, predicted_labels, test_dates) -> pd.Series:
     """
     # keep only values from usd dict
     usd = [usd[date] for date in usd]
-    # keep same len of data as prediction
+    # x and y must have same first dimension
     usd = usd[: len(predicted_labels)]
+    usd.append(usd[-1])
     # calculate usd variation
     usd = [usd[i] - usd[i - 1] for i in range(1, len(usd))]
-    matplotlib.pyplot.figure(figsize=(20, 10))
-    if constants.PLOT_VP_SIX_MONTHS:
-        matplotlib.pyplot.title("Dollar variation vs predictions - Every 6 months")
-        matplotlib.pyplot.plot(test_dates[::6], usd[::6], color="blue")
-        matplotlib.pyplot.plot(test_dates[::6], predicted_labels[::6], color="red")
+    plt.figure(figsize=(20, 10))
+    if constants.PLOT_VP_THREE_MONTHS:
+        plt.title("Dollar variation vs predictions - Every 3 months")
+        plt.plot(test_dates[::3], usd[::3], color="red")
+        plt.plot(test_dates[::3], predicted_labels[::3], color="blue")
+    elif constants.PLOT_VP_SIX_MONTHS:
+        plt.title("Dollar variation vs predictions - Every 6 months")
+        plt.plot(test_dates[::6], usd[::6], color="red")
+        plt.plot(test_dates[::6], predicted_labels[::6], color="blue")
+    elif constants.PLOT_VP_NINE_MONTHS:
+        plt.title("Dollar variation vs predictions - Every 9 months")
+        plt.plot(test_dates[::9], usd[::9], color="red")
+        plt.plot(test_dates[::9], predicted_labels[::9], color="blue")
+    elif constants.PLOT_VP_TWELVE_MONTHS:
+        plt.title("Dollar variation vs predictions - Every 12 months")
+        plt.plot(test_dates[::12], usd[::12], color="red")
+        plt.plot(test_dates[::12], predicted_labels[::12], color="blue")
     else:
-        matplotlib.pyplot.title("Dollar variation vs predictions - All data")
-        matplotlib.pyplot.plot(test_dates, usd, color="blue")
-        matplotlib.pyplot.plot(test_dates, predicted_labels, color="red")
-    matplotlib.pyplot.xticks(rotation=45)
-    matplotlib.pyplot.yticks(["down", "up"])
-    return matplotlib.pyplot
+        plt.title("Dollar variation vs predictions - Every month")
+        plt.plot(test_dates, usd, color="red")
+        plt.plot(test_dates, predicted_labels, color="blue")
 
+    variation = [0 if x == "down" else 1 for x in predicted_labels]
+
+    # axvspan facecolor green and red for up and down
+    # for i in variation:
+    #     if i == 0:
+    #         # plot axvspan from i to i+1
+    #         plt.axvspan(i, i + 1, facecolor="red", alpha=0.2)
+    #     elif i == 1:
+    #         plt.axvspan(i, i + 1, facecolor="green", alpha=0.2)
+    #     else:
+    #         raise ValueError("Invalid value")
+
+    plt.grid(color='grey', linestyle='--', linewidth=0.5)
+    plt.xticks(rotation=45)
+    plt.yticks(["down", "up"])
+
+    return plt
+
+
+def plot_roc_curve(true_y, y_prob):
+    """
+    plots the roc curve based of the probabilities
+    : transform true_y to 0 and 1
+    : transform y_prob to 0 and 1
+    """
+    true_y = [0 if x == "down" else 1 for x in true_y]
+    y_prob = [0 if x == "down" else 1 for x in y_prob]
+    fpr, tpr, thresholds = metrics.roc_curve(true_y, y_prob)
+    auc = metrics.roc_auc_score(true_y, y_prob)
+    plt.figure(figsize=(20, 10))
+    plt.plot(fpr, tpr, color="darkorange", label=f"ROC curve (area = {auc})")
+    # print(f"Logistic ROC curve (area = {auc})")
+    plt.plot([0, 1], [0, 1], color="navy", linestyle="--")
+
+    # choose the threshold that maximizes the accuracy
+    accuracy = [(s > 0.5) for s in y_prob]
+    best_threshold = thresholds[numpy.argmax(accuracy)]
+    print(f"best_threshold: {best_threshold}")  # output: 0.4
+
+    # add labels to the thresholds
+    plt.stem(thresholds, tpr)
+
+    # plt.xlim([0.0, 1.0])
+    # plt.ylim([0.0, 1.05])
+    # show the AUC score on the plot
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title("ROC Curve")
+    plt.legend(loc="lower right")
+    plt.fill_between(fpr, tpr, color='orange', alpha=0.2)
+    plt.grid(color='grey', linestyle='dashed', linewidth=0.5)
+    return plt
+
+
+def features_analysis(data: str) -> plt:
+    """
+    Plot the features on the same graph.
+    :return:
+    """
+    # Split the string on whitespace to create a list of numbers
+    data = [int(x) for x in data.split()]
+
+    # Normalize the data
+    minmax = (data - data.min()) / (data.max() - data.min())
+
+    list_col = ["INR", "S&P500", "^NSEI"]
+    x = data['Adj Close']
+
+    plt.figure(figsize=(25, 10))
+    plt.plot(minmax(x), 'k', lw=2, label='Adj Close')
+
+    for col in list_col:
+        y = data['Adj Close ' + col]
+        plt.plot(minmax(y), label=col)
+
+    plt.legend()
+    plt.grid()
+    return plt
+
+
+def plot_usd(usd: dict) -> plt:
+    """
+    Plot usd values.
+    :param usd:
+    :return:
+    """
+    # y for values
+    y = [usd[date] for date in usd]
+    # x for dates
+    x = [date for date in usd]
+
+    if constants.SMA_PLOT:
+        # transform x and y list to dataframe
+        df = pd.DataFrame({"date": x, "usd": y})
+        # set date as index
+        df = df.set_index("date")
+        # calculate simple moving average
+        df["SMA"] = df["usd"].rolling(window=10).mean()
+        # calculating cumulative moving
+        df["CMA"] = df["usd"].expanding(3).mean()
+        df[["usd", "SMA", "CMA"]].plot(label="usd",
+                                       figsize=(20, 10),
+                                       title=("USDX values with SMA and CMA"),
+                                       grid=True,
+                                       rot=45,
+                                       color=["blue", "red", "green"])
+    else:
+        # show only one date per year on x-axis (for better visualization)
+        x = [x[i] for i in range(len(x)) if i % 9 == 0]
+        y = [y[i] for i in range(len(y)) if i % 9 == 0]
+        plt.figure(figsize=(20, 10))
+        plt.grid(color='grey', linestyle='--', linewidth=0.5)
+        plt.title("USDX values")
+        plt.plot(x, y, color="red")
+        plt.xticks(rotation=45)
+        # zoom_factory
+        zoom_factory(plt.gca(), base_scale=1.2)
+
+    return plt
+
+
+def sma(usd: dict, windows: int) -> dict:
+    """
+    Calculate simple moving average.
+    :param usd:
+    :return:
+    """
+    # transform usd dict to dataframe
+    df = pd.DataFrame({"date": usd.keys(), "usd": usd.values()})
+    # set date as index
+    df = df.set_index("date")
+    # calculate simple moving average
+    df["SMA"] = df["usd"].rolling(window=windows).mean()
+    # transform dataframe to dict
+    usd = df.to_dict()
+    # keep only SMA values
+    usd = usd["SMA"]
+
+    # boxplot
+    plt.figure(figsize=(20, 10))
+    plt.grid(color='grey', linestyle='--', linewidth=0.5)
+    plt.title("Outliers")
+    plt.boxplot(df["usd"])
+
+    return usd
+
+
+# def normalize_data(df):
+#     """
+#     Normalize time series data
+#     :param df: Dataframe to normalize
+#     :return: Normalized dataframe
+#     """
+#     df2 = df["Adj Close"]
+#     # do not normalize the "Adj Close" column
+#     scaler = MinMaxScaler(feature_range=(0, 1))
+#     scaled = scaler.fit_transform(df)
+#     # convert the array back to a dataframe
+#     scaled = pd.DataFrame(scaled, columns=df.columns, index=df.index)
+#     # drop first column
+#     scaled = scaled.drop(scaled.columns[0], axis=1)
+#     scaled = pd.concat([scaled, df2], axis=1)
+#     # put last column at the beginning
+#     cols = scaled.columns.tolist()
+#     cols = cols[-1:] + cols[:-1]
+#     scaled = scaled[cols]
+#
+#     return scaled
+
+
+# def cross_validate(model, X, y, k=5):
+#     """
+#     Perform k-fold cross-validation for a given model.
+#
+#     Parameters:
+#     model: a scikit-learn model with fit and score methods
+#     X: feature matrix
+#     y: target vector
+#     k: number of folds (default is 5)
+#
+#     Returns:
+#     mean_score: mean score across all k folds
+#     """
+#     # Create a k-fold cross-validation iterator
+#     kfold = KFold(n_splits=k, shuffle=True, random_state=1)
+#
+#     # Initialize a list to store the scores
+#     scores = []
+#
+#     # Loop through the k-fold splits
+#     for train_index, test_index in kfold.split(X):
+#         # Get the train and test data for this split
+#         X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+#         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+#
+#         # Fit the model on the train data
+#         model.fit(X_train, y_train)
+#
+#         # Get the score for this split
+#         score = model.score(X_test, y_test)
+#         scores.append(score)
+#
+#     # Calculate the mean score across all splits
+#     mean_score = numpy.mean(scores)
+#
+#     return mean_score

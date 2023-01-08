@@ -1,33 +1,37 @@
 from typing import Any
 
 import pandas as pd
+from numpy import mean
+from numpy import std
 from sklearn import svm
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
-import xgboost as xgb
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
 
 from . import constants
 
 
 def train(X: list, Y: list) -> Any:
     if constants.MODEL_TYPE == "logistic":
-        model = LogisticRegression(solver="lbfgs", max_iter=10000)
+        # create model
+        model = LogisticRegression(
+            penalty="l2",
+            solver="lbfgs",  # ‘lbfgs’, ‘newton-cg’, ‘sag’, ‘saga’
+            max_iter=10000,
+        )
     elif constants.MODEL_TYPE == "SVM":
         model = svm.SVC(kernel="linear", max_iter=10000, probability=True)
     elif constants.MODEL_TYPE == "random_forest":
         model = RandomForestClassifier(n_estimators=100)
     elif constants.MODEL_TYPE == "decision_tree":
         model = DecisionTreeClassifier()
-    # elif constants.MODEL_TYPE == "xgboost":
-    #     model = xgb.XGBClassifier()
     else:
         raise Exception("Invalid model type")
-    # reshape list to 2D array
     model.fit(X, Y)
     return model
-
 
 # def train(X: list, Y: list) -> Any:
 #     if constants.MODEL_TYPE == "logistic":
@@ -73,8 +77,6 @@ def generate_predictions(model: Any, test_input_data: list) -> tuple:
             probas = model.predict_proba([input_data]).tolist()[0]
         elif constants.MODEL_TYPE == "decision_tree":
             probas = model.predict_proba([input_data]).tolist()[0]
-        # elif constants.MODEL_TYPE == "xgboost":
-        #     probas = model.predict_proba([input_data]).tolist()[0]
         else:
             raise Exception("Invalid model type")
         all_probs.append(probas)

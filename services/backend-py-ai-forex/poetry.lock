@@ -407,6 +407,24 @@ docs = ["sphinx"]
 test = ["pytest (<5.4)", "pytest-cov"]
 
 [[package]]
+name = "mpl-interactions"
+version = "0.22.1"
+description = "Matplotlib aware interact functions"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+matplotlib = ">=3.4"
+
+[package.extras]
+dev = ["PyQt5", "Sphinx (>=1.5)", "black", "ipympl (>=0.5.8)", "ipywidgets (>=7.5.0)", "isort", "jupyter-sphinx", "mpl-playback (>=0.1.1)", "myst-nb", "nbval", "numpydoc", "pandas", "pre-commit", "pytest", "pytest-mpl", "requests", "scipy", "sphinx-autobuild", "sphinx-book-theme", "sphinx-copybutton", "sphinx-gallery (>=0.8.2)", "sphinx-panels", "sphinx-thebe", "sphinx-togglebutton", "tox (>=1.9)", "xarray"]
+doc = ["Sphinx (>=1.5)", "ipympl (>=0.5.8)", "ipywidgets (>=7.5.0)", "jupyter-sphinx", "mpl-playback (>=0.1.1)", "myst-nb", "numpydoc", "sphinx-book-theme", "sphinx-copybutton", "sphinx-gallery (>=0.8.2)", "sphinx-panels", "sphinx-thebe", "sphinx-togglebutton", "xarray"]
+jupyter = ["ipympl (>=0.5.8)", "ipywidgets (>=7.5.0)"]
+sty = ["black", "isort"]
+test = ["PyQt5", "nbval", "pandas", "pytest", "pytest-mpl", "requests", "scipy", "xarray"]
+
+[[package]]
 name = "mypy"
 version = "0.790"
 description = "Optional static typing for Python"
@@ -534,6 +552,17 @@ python-versions = ">=3.7"
 [package.extras]
 docs = ["furo (>=2022.9.29)", "proselint (>=0.13)", "sphinx (>=5.3)", "sphinx-autodoc-typehints (>=1.19.4)"]
 test = ["appdirs (==1.4.4)", "pytest (>=7.2)", "pytest-cov (>=4)", "pytest-mock (>=3.10)"]
+
+[[package]]
+name = "plotly"
+version = "5.11.0"
+description = "An open-source, interactive data visualization library for Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+tenacity = ">=6.2.0"
 
 [[package]]
 name = "pluggy"
@@ -901,6 +930,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "tenacity"
+version = "8.1.0"
+description = "Retry code until it succeeds"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+doc = ["reno", "sphinx", "tornado (>=4.5)"]
+
+[[package]]
 name = "threadpoolctl"
 version = "3.1.0"
 description = "threadpoolctl"
@@ -1035,7 +1075,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.12"
-content-hash = "8efc1f2487480ea845990553fa88f452daaae788f99544534dad01fb4b809a7b"
+content-hash = "26bed1a71f58cc18841919f147c636481a3b28bb2be226fa7e09ef2145ca4a24"
 
 [metadata.files]
 astroid = [
@@ -1471,6 +1511,10 @@ mock = [
     {file = "mock-4.0.3-py3-none-any.whl", hash = "sha256:122fcb64ee37cfad5b3f48d7a7d51875d7031aaf3d8be7c42e2bee25044eee62"},
     {file = "mock-4.0.3.tar.gz", hash = "sha256:7d3fbbde18228f4ff2f1f119a45cdffa458b4c0dee32eb4d2bb2f82554bac7bc"},
 ]
+mpl-interactions = [
+    {file = "mpl_interactions-0.22.1-py3-none-any.whl", hash = "sha256:91bd16566006f98d7af6a97445cbb295d0627726b56d96c7340b4b760cba1a63"},
+    {file = "mpl_interactions-0.22.1.tar.gz", hash = "sha256:5968b860b1e7b84d68133442536f1b09034a06385125c9ebf737d7263784c95c"},
+]
 mypy = [
     {file = "mypy-0.790-cp35-cp35m-macosx_10_6_x86_64.whl", hash = "sha256:bd03b3cf666bff8d710d633d1c56ab7facbdc204d567715cb3b9f85c6e94f669"},
     {file = "mypy-0.790-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:2170492030f6faa537647d29945786d297e4862765f0b4ac5930ff62e300d802"},
@@ -1635,6 +1679,10 @@ pillow = [
 platformdirs = [
     {file = "platformdirs-2.5.4-py3-none-any.whl", hash = "sha256:af0276409f9a02373d540bf8480021a048711d572745aef4b7842dad245eba10"},
     {file = "platformdirs-2.5.4.tar.gz", hash = "sha256:1006647646d80f16130f052404c6b901e80ee4ed6bef6792e1f238a8969106f7"},
+]
+plotly = [
+    {file = "plotly-5.11.0-py2.py3-none-any.whl", hash = "sha256:52fd74b08aa4fd5a55b9d3034a30dbb746e572d7ed84897422f927fdf687ea5f"},
+    {file = "plotly-5.11.0.tar.gz", hash = "sha256:4efef479c2ec1d86dcdac8405b6ca70ca65649a77408e39a7e84a1ea2db6c787"},
 ]
 pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
@@ -1850,6 +1898,10 @@ six = [
 ]
 sklearn = [
     {file = "sklearn-0.0.post1.tar.gz", hash = "sha256:76b9ed1623775168657b86b5fe966d45752e5c87f528de6240c38923b94147c5"},
+]
+tenacity = [
+    {file = "tenacity-8.1.0-py3-none-any.whl", hash = "sha256:35525cd47f82830069f0d6b73f7eb83bc5b73ee2fff0437952cedf98b27653ac"},
+    {file = "tenacity-8.1.0.tar.gz", hash = "sha256:e48c437fdf9340f5666b92cd7990e96bc5fc955e1298baf4a907e3972067a445"},
 ]
 threadpoolctl = [
     {file = "threadpoolctl-3.1.0-py3-none-any.whl", hash = "sha256:8b99adda265feb6773280df41eece7b2e6561b772d21ffd52e372f999024907b"},
