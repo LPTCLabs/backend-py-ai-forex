@@ -466,30 +466,30 @@ def plot_roc_curve(true_y, y_prob):
     return plt
 
 
-def features_analysis(data: str) -> plt:
-    """
-    Plot the features on the same graph.
-    :return:
-    """
-    # Split the string on whitespace to create a list of numbers
-    data = [int(x) for x in data.split()]
-
-    # Normalize the data
-    minmax = (data - data.min()) / (data.max() - data.min())
-
-    list_col = ["INR", "S&P500", "^NSEI"]
-    x = data['Adj Close']
-
-    plt.figure(figsize=(25, 10))
-    plt.plot(minmax(x), 'k', lw=2, label='Adj Close')
-
-    for col in list_col:
-        y = data['Adj Close ' + col]
-        plt.plot(minmax(y), label=col)
-
-    plt.legend()
-    plt.grid()
-    return plt
+# def features_analysis(data: str) -> plt:
+#     """
+#     Plot the features on the same graph.
+#     :return:
+#     """
+#     # Split the string on whitespace to create a list of numbers
+#     data = [int(x) for x in data.split()]
+#
+#     # Normalize the data
+#     minmax = (data - data.min()) / (data.max() - data.min())
+#
+#     list_col = ["INR", "S&P500", "^NSEI"]
+#     x = data['Adj Close']
+#
+#     plt.figure(figsize=(25, 10))
+#     plt.plot(minmax(x), 'k', lw=2, label='Adj Close')
+#
+#     for col in list_col:
+#         y = data['Adj Close ' + col]
+#         plt.plot(minmax(y), label=col)
+#
+#     plt.legend()
+#     plt.grid()
+#     return plt
 
 
 def plot_usd(usd: dict) -> plt:

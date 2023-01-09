@@ -92,8 +92,8 @@ def predict_dataset(model: Any, source: str, macro_data: dict, usd: pd.Series) -
     # roc_auc.show()
 
     # Features analysis
-    features_analysis = util.features_analysis(constants.MACRO_DATA)
-    features_analysis.show()
+    # features_analysis = util.features_analysis(constants.MACRO_DATA)
+    # features_analysis.show()
 
     # util.write_json_csv("variation_prediction", json.dumps(combined))
 
@@ -185,7 +185,6 @@ def train_model() -> None:
     model = machine_learning.train(train_input_data, train_output_data)
     # Predict on test data
     predict_dataset(model, constants.TEST_DATA, macro_data, usd)
-    util.cross_validate_model(model, train_input_data, train_output_data)
 # def lunch_model() -> None:
 #     util.automate_randomly_the_process(train_model())
 

@@ -38,25 +38,25 @@ col = data.columns
 # print(data_clean.describe())
 
 # Convert the data to floats
-data = [float(x) for x in data]
-
-def minmax(data):
-    return (data - data.min()) / (data.max() - data.min())
-
-
-list_col = ["INR", "S&P500", "^NSEI"]
-x = data['Adj Close']
-
-plt.figure(figsize=(25, 10))
-plt.plot(minmax(x), 'k', lw=2, label='Adj Close')
-
-for col in list_col:
-    y = data[col]
-    plt.plot(minmax(y), label=col)
-
-plt.legend()
-plt.title("USDX vs INR")
-plt.grid()
+# data = [float(x) for x in data]
+#
+# def minmax(data):
+#     return (data - data.min()) / (data.max() - data.min())
+#
+#
+# list_col = ["INR", "S&P500", "^NSEI"]
+# x = data['Adj Close']
+#
+# plt.figure(figsize=(25, 10))
+# plt.plot(minmax(x), 'k', lw=2, label='Adj Close')
+#
+# for col in list_col:
+#     y = data[col]
+#     plt.plot(minmax(y), label=col)
+#
+# plt.legend()
+# plt.title("USDX vs INR")
+# plt.grid()
 
 # plot Adj Close and INR
 # fig = px.line(data, x="Date", y=["INR", "Adj Close"])
